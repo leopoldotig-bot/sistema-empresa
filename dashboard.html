@@ -1,0 +1,76 @@
+
+<!doctype html>
+<title>DOXA GROUP - Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<style>
+.header { background-color: #007bff; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.content { padding: 20px; }
+.case-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.case-table th, .case-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+.case-table th { background-color: #f2f2f2; }
+.tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; }
+.tag-Pendiente { background-color: #ffc107; color: #343a40; }
+.tag-Investigación { background-color: #17a2b8; color: white; }
+.tag-Revisión { background-color: #dc3545; color: white; }
+.tag-Pendiente_Facturación { background-color: #ff8c00; color: white; }
+.tag-Facturado { background-color: #28a745; color: white; }
+.actions-row { display: flex; gap: 5px; }
+</style>
+<div class="header">
+<h1>DOXA GROUP - Sistema de Siniestros</h1>
+<div>
+<span>Usuario: {{ session.get('nombre') }} ({{ session.get('user_rol') }})</span>
+<a href="{{ url_for('logout') }}" class="btn btn-red">Salir</a>
+</div>
+</div>
+<div class="content">
+{% if session.get('user_rol') == 'Creador' %}
+<a href="{{ url_for('add_siniestro') }}" class="btn btn-green">➕ Añadir Siniestro</a>
+<a href="{{ url_for('sumatorias_reporte') }}" class="btn btn-blue">📈 Reporte de Pagos Pendientes</a>
+{% endif %}
+{% if session.get('user_rol') == 'Secretaria' %}
+<a href="{{ url_for('sumatorias_reporte') }}" class="btn btn-blue">📈 Reporte Financiero</a>
+{% endif %}
+<h2>Casos Asignados</h2>
+<table class="case-table">
+    <thead>
+        <tr>
+            <th>Cód. Único</th>
+            <th>Compañía</th>
+            <th>Perito Asignado</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for caso in casos %}
+        <tr>
+            <td>{{ caso.codigo_unico }}</td>
+            <td>{{ caso.compania_aseguradora }}</td>
+            <td>{{ caso.perito_nombre }}</td>
+            <td>
+                <span class="tag tag-{{ caso.estado | replace(' ', '_') }}">{{ caso.estado }}</span>
+            </td>
+            <td class="actions-row">
+                <a href="{{ url_for('detalle_siniestro', id=caso.id) }}" class="btn btn-blue">📁 Carpeta</a>
+
+                {% if session.get('user_rol') == 'Perito' %}
+                    {% if caso.estado == 'Pendiente' %}
+                        <form method="POST" action="{{ url_for('iniciar_investigacion', id=caso.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-green">Empezar Investigación</button>
+                        </form>
+                    {% elif caso.estado == 'Investigación' %}
+                        <form method="POST" action="{{ url_for('terminar_investigacion', id=caso.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-red">Terminar Investigación</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+
+                {% if session.get('user_rol') == 'Creador' %}
+                     <button class="btn btn-red" onclick="alert('Funcionalidad de Eliminación del Siniestro')">❌ Eliminar</button>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

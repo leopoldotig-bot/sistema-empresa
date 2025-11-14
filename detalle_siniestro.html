@@ -1,0 +1,73 @@
+
+<!doctype html>
+<title>DOXA GROUP - Detalle Siniestro {{ siniestro.codigo_unico }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<style>
+.detalle-header { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+.gasto-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.gasto-table th, .gasto-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+.gasto-table th { background-color: #f2f2f2; }
+.tag-pendiente-pago { background-color: #ffc107; color: #343a40; padding: 3px 6px; border-radius: 3px; font-size: 0.9em; }
+.gasto-form input { padding: 5px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
+.gasto-form { display: flex; align-items: center; margin-bottom: 20px; }
+</style>
+<div class="detalle-header">
+<a href="{{ url_for('dashboard') }}" class="btn btn-blue">← Volver</a>
+<h1>Siniestro #{{ siniestro.codigo_unico }} ({{ siniestro.compania_aseguradora }})</h1>
+<p>Asignado a: {{ siniestro.perito_nombre }} | Estado: {{ siniestro.estado }}</p>
+</div>
+<h2>📁 Carpeta - Rendición de Gastos de Investigación</h2>
+{% if session.get('user_rol') == 'Perito' %}
+<h3>Añadir Nuevo Gasto</h3>
+<form method="POST" class="gasto-form">
+<input type="hidden" name="action" value="add_gasto">
+<input type="text" name="descripcion_gasto" placeholder="Descripción" required>
+<input type="number" name="monto_guaranies" placeholder="Monto en {{ moneda }}" required style="width: 120px;">
+<input type="text" name="ticket_ruta" placeholder="Link/Ruta del Ticket (Simulado)">
+<button type="submit" class="btn btn-green">Añadir Gasto</button>
+</form>
+{% endif %}
+<table class="gasto-table">
+<thead>
+<tr>
+<th>Descripción</th>
+<th>Monto</th>
+<th>Ticket</th>
+<th>Estado de Reembolso</th>
+<th>Fecha de Pago (Sólo Creador)</th>
+</tr>
+</thead>
+<tbody>
+{% for gasto in gastos %}
+<tr>
+<td>{{ gasto.descripcion_gasto }}</td>
+<td>{{ '{:,.0f}'.format(gasto.monto_guaranies).replace(',', '.') }} {{ moneda }}</td>
+<td><a href="{{ gasto.ticket_ruta }}" target="_blank">Ver Ticket</a></td>
+<td>
+{% if not gasto.fecha_pago_reembolso %}
+<span class="tag-pendiente-pago">PENDIENTE PAGO</span>
+{% else %}
+Pagado
+{% endif %}
+</td>
+<td>
+{% if session.get('user_rol') == 'Creador' %}
+<form method="POST" style="display: flex; align-items: center; gap: 5px;">
+<input type="hidden" name="action" value="update_pago">
+<input type="hidden" name="gasto_id" value="{{ gasto.id }}">
+<input type="date" name="fecha_pago" value="{{ gasto.fecha_pago_reembolso if gasto.fecha_pago_reembolso else '' }}" style="width: 140px;">
+<button type="submit" class="btn btn-blue" style="font-size: 0.8em;">Guardar</button>
+</form>
+{% else %}
+{{ gasto.fecha_pago_reembolso if gasto.fecha_pago_reembolso else 'Pendiente' }}
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% if session.get('user_rol') in ['Creador', 'Secretaria'] %}
+<hr>
+<h2>💵 Gestión de Facturación (Pendiente de Implementación)</h2>
+<p>Aquí se vincularía la factura y se registraría la Fecha de Cobro para el reporte financiero.</p>
+{% endif %}

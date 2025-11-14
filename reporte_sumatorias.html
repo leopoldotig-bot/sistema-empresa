@@ -1,0 +1,46 @@
+
+<!doctype html>
+<title>DOXA GROUP - Reporte de Sumatorias</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<style>
+.content { padding: 20px; }
+.report-card { border: 1px solid #ccc; padding: 20px; margin-top: 20px; border-radius: 8px; background-color: #f9f9f9; }
+.sum-result { font-size: 2.2em; font-weight: bold; color: #dc3545; margin-top: 10px; }
+.btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; text-decoration: none; display: inline-block; font-size: 0.9em; }
+.btn-blue { background-color: #007bff; color: white; }
+input[type="text"], select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-right: 10px; }
+</style>
+<div class="content">
+<a href="{{ url_for('dashboard') }}" class="btn btn-blue">← Volver al Dashboard</a>
+<h2>📈 Reporte de Sumatorias Pendientes (Creador/Secretaria)</h2>
+<div class="report-card">
+    <h3>Deuda de Compañías (Facturas Pendientes de Cobro)</h3>
+    <form method="GET" action="{{ url_for('sumatorias_reporte') }}" style="margin-bottom: 20px;">
+        <input type="text" name="compania" placeholder="Nombre de la Compañía" value="{{ compania if compania else '' }}">
+        <button type="submit" class="btn btn-blue">SUMAR DEUDA COMPAÑÍA</button>
+    </form>
+    {% if compania %}
+        <p>Deuda Total de <strong>{{ compania }}</strong> pendiente de cobro:</p>
+        <div class="sum-result">{{ '{:,.0f}'.format(deuda_compania).replace(',', '.') }} {{ moneda }}</div>
+    {% endif %}
+</div>
+
+<div class="report-card">
+    <h3>Deuda a Peritos (Gastos Pendientes de Reembolso)</h3>
+    <form method="GET" action="{{ url_for('sumatorias_reporte') }}">
+        <select name="perito_id">
+            <option value="">-- Seleccione Perito --</option>
+            {% for perito in peritos_list %}
+            <option value="{{ perito.id }}" {% if perito_id|string == perito.id|string %}selected{% endif %}>
+                {{ perito.name }}
+            </option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-blue">SUMAR DEUDA PERITO</button>
+    </form>
+    {% if perito_id %}
+        <p>Deuda Total con el perito pendiente de pago:</p>
+        <div class="sum-result">{{ '{:,.0f}'.format(deuda_perito).replace(',', '.') }} {{ moneda }}</div>
+    {% endif %}
+</div>
+</div>
